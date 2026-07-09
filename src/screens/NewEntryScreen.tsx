@@ -10,6 +10,7 @@ import { RootStackParamList, DiaryEntry, PriorityLevel } from '../types';
 import { insertEntry, updateEntry, getEntryById } from '../database/database';
 import { ColorSelector } from '../components/ColorSelector';
 import { PhotoPicker } from '../components/PhotoPicker';
+import { AudioRecorder } from '../components/AudioRecorder';
 import { scheduleReminder } from '../utils/notifications';
 import { APP_THEME } from '../utils/colors';
 import * as Linking from 'expo-linking';
@@ -33,9 +34,11 @@ export function NewEntryScreen({ navigation, route }: NewEntryScreenProps) {
   const [priority, setPriority] = useState<PriorityLevel>('medium');
   const [photos, setPhotos] = useState<string[]>([]);
   const [links, setLinks] = useState<string[]>(['']);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
   const [hasReminder, setHasReminder] = useState(false);
   const [reminderDate, setReminderDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [showReminderPicker, setShowReminderPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +60,9 @@ export function NewEntryScreen({ navigation, route }: NewEntryScreenProps) {
       if (entry.reminderDate) {
         setHasReminder(true);
         setReminderDate(new Date(entry.reminderDate));
+      }
+      if (entry.audioUri) {
+        setAudioUri(entry.audioUri);
       }
     }
   };
@@ -98,6 +104,7 @@ export function NewEntryScreen({ navigation, route }: NewEntryScreenProps) {
       photos,
       links: validLinks,
       reminderDate: hasReminder ? reminderDate.toISOString() : null,
+      audioUri,
       createdAt: isEditing ? '' : now,
       updatedAt: now,
     };
@@ -231,6 +238,9 @@ export function NewEntryScreen({ navigation, route }: NewEntryScreenProps) {
           {/* Photos */}
           <PhotoPicker photos={photos} onPhotosChange={setPhotos} />
 
+          {/* Audio Recording */}
+          <AudioRecorder audioUri={audioUri} onAudioChange={setAudioUri} />
+
           {/* Links */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -274,32 +284,63 @@ export function NewEntryScreen({ navigation, route }: NewEntryScreenProps) {
             </View>
 
             {hasReminder && (
-              <TouchableOpacity
-                style={styles.reminderDateBtn}
-                onPress={() => setShowReminderPicker(true)}
-              >
-                <Ionicons name="time-outline" size={18} color={APP_THEME.primary} />
-                <Text style={styles.reminderDateText}>
-                  {reminderDate.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  style={styles.reminderDateBtn}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={APP_THEME.primary} />
+                  <Text style={styles.reminderDateText}>
+                    {reminderDate.toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.reminderDateBtn, { marginTop: 8 }]}
+                  onPress={() => setShowTimePicker(true)}
+                >
+                  <Ionicons name="time-outline" size={18} color={APP_THEME.primary} />
+                  <Text style={styles.reminderDateText}>
+                    {reminderDate.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Text>
+                </TouchableOpacity>
+              </>
             )}
 
-            {showReminderPicker && (
+            {showDatePicker && (
               <DateTimePicker
                 value={reminderDate}
-                mode="datetime"
+                mode="date"
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={(event, selectedDate) => {
-                  setShowReminderPicker(Platform.OS !== 'ios');
+                  setShowDatePicker(Platform.OS !== 'ios');
                   if (selectedDate) {
-                    setReminderDate(selectedDate);
+                    const newDate = new Date(reminderDate);
+                    newDate.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                    setReminderDate(newDate);
+                  }
+                }}
+              />
+            )}
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={reminderDate}
+                mode="time"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={(event, selectedDate) => {
+                  setShowTimePicker(Platform.OS !== 'ios');
+                  if (selectedDate) {
+                    const newDate = new Date(reminderDate);
+                    newDate.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+                    setReminderDate(newDate);
                   }
                 }}
               />

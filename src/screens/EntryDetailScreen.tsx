@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, Image, StyleSheet,
   TouchableOpacity, Alert, Linking, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, DiaryEntry } from '../types';
@@ -21,14 +22,57 @@ interface EntryDetailScreenProps {
 export function EntryDetailScreen({ navigation, route }: EntryDetailScreenProps) {
   const { entryId } = route.params;
   const [entry, setEntry] = useState<DiaryEntry | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const playerRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
     loadEntry();
   }, [entryId]);
 
+  // Cleanup player on unmount
+  useEffect(() => {
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
   const loadEntry = async () => {
     const data = await getEntryById(entryId);
     setEntry(data);
+  };
+
+  const handlePlayAudio = async () => {
+    if (!entry?.audioUri) return;
+
+    if (isPlaying && playerRef.current) {
+      await playerRef.current.stopAsync();
+      await playerRef.current.unloadAsync();
+      playerRef.current = null;
+      setIsPlaying(false);
+      return;
+    }
+
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: entry.audioUri },
+        { shouldPlay: true }
+      );
+      playerRef.current = sound;
+      setIsPlaying(true);
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setIsPlaying(false);
+          sound.unloadAsync();
+          playerRef.current = null;
+        }
+      });
+    } catch (err) {
+      console.error('Failed to play audio:', err);
+      setIsPlaying(false);
+    }
   };
 
   const handleDelete = () => {
@@ -136,6 +180,24 @@ export function EntryDetailScreen({ navigation, route }: EntryDetailScreenProps)
                 <Image key={index} source={{ uri }} style={styles.photo} />
               ))}
             </ScrollView>
+          </View>
+        )}
+
+        {/* Audio Recording */}
+        {entry.audioUri && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Voice Recording</Text>
+            <View style={styles.audioPlayer}>
+              <Ionicons name="musical-note" size={20} color={APP_THEME.primary} />
+              <Text style={styles.audioLabel}>Audio recording</Text>
+              <TouchableOpacity onPress={handlePlayAudio} style={styles.playBtn}>
+                <Ionicons
+                  name={isPlaying ? 'stop-circle' : 'play-circle'}
+                  size={36}
+                  color={APP_THEME.primary}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -328,5 +390,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#E65100',
     fontWeight: '600',
+  },
+  audioPlayer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: APP_THEME.background,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 10,
+  },
+  audioLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: APP_THEME.text,
+    fontWeight: '500',
+  },
+  playBtn: {
+    marginLeft: 'auto',
   },
 });

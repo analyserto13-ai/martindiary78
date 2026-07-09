@@ -37,18 +37,5 @@
         "APP_ENV": "production"
       }
     }
-  },
-  "submit": {
-    "production": {
-      "android": {
-        "serviceAccountKeyPath": "./service-account-key.json",
-        "track": "production"
-      },
-      "ios": {
-        "appleId": "",
-        "ascAppId": "",
-        "appleTeamId": ""
-      }
-    }
   }
 }

@@ -60,6 +60,9 @@ export function EntryCard({ entry, onPress }: EntryCardProps) {
           {entry.reminderDate && (
             <Ionicons name="alarm-outline" size={14} color="#FF7043" />
           )}
+          {entry.audioUri && (
+            <Ionicons name="mic-outline" size={14} color="#5C6BC0" />
+          )}
         </View>
       </View>
     </TouchableOpacity>

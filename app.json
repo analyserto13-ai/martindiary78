@@ -28,9 +28,14 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "POST_NOTIFICATIONS"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -45,9 +50,15 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "873f4f3f-1b1b-4cce-a30c-e0f9dcc52283"
       }
     },
-    "owner": "analyserto13-ai"
+    "owner": "vagmartin",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/873f4f3f-1b1b-4cce-a30c-e0f9dcc52283"
+    }
   }
 }

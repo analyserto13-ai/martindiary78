@@ -9,6 +9,7 @@ export interface DiaryEntry {
   photos: string[]; // URIs
   links: string[]; // URLs
   reminderDate: string | null; // ISO datetime string or null
+  audioUri: string | null; // URI of recorded audio file
   createdAt: string;
   updatedAt: string;
 }

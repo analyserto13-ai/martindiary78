@@ -22,6 +22,7 @@ async function initDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
       photos TEXT NOT NULL DEFAULT '[]',
       links TEXT NOT NULL DEFAULT '[]',
       reminderDate TEXT,
+      audioUri TEXT,
       createdAt TEXT NOT NULL,
       updatedAt TEXT NOT NULL
     );
@@ -43,8 +44,8 @@ export async function getEntryById(id: string): Promise<DiaryEntry | null> {
 export async function insertEntry(entry: DiaryEntry): Promise<void> {
   const database = await getDatabase();
   await database.runAsync(
-    `INSERT INTO entries (id, title, content, date, priority, photos, links, reminderDate, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO entries (id, title, content, date, priority, photos, links, reminderDate, audioUri, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       entry.id,
       entry.title,
@@ -54,6 +55,7 @@ export async function insertEntry(entry: DiaryEntry): Promise<void> {
       JSON.stringify(entry.photos),
       JSON.stringify(entry.links),
       entry.reminderDate,
+      entry.audioUri,
       entry.createdAt,
       entry.updatedAt,
     ]
@@ -64,7 +66,7 @@ export async function updateEntry(entry: DiaryEntry): Promise<void> {
   const database = await getDatabase();
   await database.runAsync(
     `UPDATE entries
-     SET title = ?, content = ?, date = ?, priority = ?, photos = ?, links = ?, reminderDate = ?, updatedAt = ?
+     SET title = ?, content = ?, date = ?, priority = ?, photos = ?, links = ?, reminderDate = ?, audioUri = ?, updatedAt = ?
      WHERE id = ?`,
     [
       entry.title,
@@ -74,6 +76,7 @@ export async function updateEntry(entry: DiaryEntry): Promise<void> {
       JSON.stringify(entry.photos),
       JSON.stringify(entry.links),
       entry.reminderDate,
+      entry.audioUri,
       entry.updatedAt,
       entry.id,
     ]
@@ -95,6 +98,7 @@ function mapRowToEntry(row: any): DiaryEntry {
     photos: JSON.parse(row.photos || '[]'),
     links: JSON.parse(row.links || '[]'),
     reminderDate: row.reminderDate,
+    audioUri: row.audioUri || null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
